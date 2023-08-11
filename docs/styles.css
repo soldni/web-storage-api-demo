@@ -92,7 +92,7 @@ a:hover {
     margin: 0 auto;
     padding: 20px;
     background-color: #fff;
-    box-shadow: 0 2px 4px rgb(204 229 235);
+    box-shadow: 0 2px 4px rgb(0, 0, 0, 0.1);
 }
 
 /* Center align text within container */
