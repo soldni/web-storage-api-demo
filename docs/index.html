@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Secret Storage Example</title>
+</head>
+
+<body>
+    <h1>Secret Storage Example</h1>
+
+    <div>
+        <h2>GitHub Repository Setup</h2>
+        <p>Before you can paste your bib content, you have to setup access to github</p>
+        <div style="margin-bottom: .2em;">
+            <label for="githubUsername">Github username:</label>
+            <input type="text" id="githubUsername">
+        </div>
+        <div style="margin-bottom: .2em;">
+            <label for="repositoryName">Github repository:</label>
+            <input type="text" id="repositoryName">
+        </div>
+        <div style="margin-bottom: .2em;">
+            <label for="githubAccessToken">GitHub Access token:</label>
+            <input type="password" id="githubAccessToken">
+        </div>
+        <div>
+            <button id="storeButton">Store Secret</button>
+            <button id="flushButton">Flush Secret</button>
+        </div>
+        <div>
+            <p id="secretDisplay" style="color:darkgrey; size: 0.8em; font-family: monospace;"></p>
+        </div>
+    </div>
+
+    <br>
+    <br>
+    <br>
+
+    <div>
+        <h2>Paste content here</h2>
+        <div>
+            <textarea type="text" id="bibContext" cols="40" rows="5" placeholder="Paste your bib content here"></textarea>
+        </div>
+        <div>
+            <button id="pushButton">Send to Github</button>
+        </div>
+    </div>
+
+    <script>
+        // Retrieve username from local storage
+        function getFromStorage(key) {
+            try {
+                const username = localStorage.getItem(key);
+                if (username !== null) {
+                    return username;
+                } else {
+                    return null;
+                }
+            } catch (error) {
+                console.error('Error retrieving', key, ':', error);
+                return null;
+            }
+        }
+
+        // try to get username and repo from storage
+        var username = getFromStorage('githubUsername');
+        var repoName = getFromStorage('repositoryName');
+
+        if ((username === null) | (repoName === null)) {
+            // Get the current URL of the page
+            var currentURL = window.location.href;
+
+            // Extract the username and repo name using regular expressions
+            var match = currentURL.match(/https?:\/\/(.*?)\.github\.io\/(.*?)$/);
+
+            if (match) {
+                var username = match[1];
+                var repoName = match[2];
+            }
+        }
+
+        if ((username !== null) | (repoName !== null)) {
+            // Set the username and repo name in the input fields
+            document.getElementById('githubUsername').value = username;
+            document.getElementById('repositoryName').value = repoName;
+        } else {
+            // set placeholder text
+            document.getElementById('githubUsername').placeholder = "Provide github username";
+            document.getElementById('repositoryName').placeholder = "Provide github repository";
+        }
+
+        var accessToken = getFromStorage('githubAccessToken');
+
+        if (accessToken !== null) {
+            // Set the access token in the input field
+            document.getElementById('githubAccessToken').value = accessToken;
+        } else {
+            // set placeholder text
+            document.getElementById('githubAccessToken').placeholder = "Provide github access token";
+        }
+
+    </script>
+
+    <script>
+        function storeSecret(key, value) {
+            try {
+                localStorage.setItem(key, value);
+            } catch (error) {
+                console.error('Error storing secret:', error);
+            }
+        }
+
+        function flushSecret (key) {
+            try {
+                localStorage.removeItem(key);
+            } catch (error) {
+                console.error('Error flushing secret:', error);
+            }
+        }
+
+        const storeButton = document.getElementById('storeButton');
+        const flushButton = document.getElementById('flushButton');
+        const githubUsername = document.getElementById('githubUsername');
+        const repositoryName = document.getElementById('repositoryName');
+        const githubAccessToken = document.getElementById('githubAccessToken');
+        const secretDisplay = document.getElementById('secretDisplay');
+
+        storeButton.addEventListener('click', function () {
+            const username = githubUsername.value;
+            const repoName = repositoryName.value;
+            const accessToken = githubAccessToken.value;
+
+            secretDisplay.textContent = '';
+
+            if (username.trim() !== '') {
+                storeSecret('githubUsername', username);
+                secretDisplay.textContent += 'username ok;';
+            } else {
+                secretDisplay.textContent += 'username FAIL;';
+            }
+
+            if (repoName.trim() !== '') {
+                storeSecret('repositoryName', repoName,);
+                secretDisplay.textContent += 'repoName ok;';
+            } else {
+                secretDisplay.textContent += 'repoName FAIL;';
+            }
+
+            if (accessToken.trim() !== '') {
+                storeSecret('githubAccessToken', accessToken);
+                secretDisplay.textContent += 'accessToken ok;';
+            } else {
+                secretDisplay.textContent += 'accessToken FAIL;';
+            }
+        });
+
+        flushButton.addEventListener('click', function () {
+            flushSecret('githubUsername');
+            flushSecret('repositoryName');
+            flushSecret('githubAccessToken');
+            location.reload();
+        });
+
+    </script>
+
+
+    <!-- <script>
+        // Store a secret in localStorage
+        function storeSecret(secret) {
+            try {
+                localStorage.setItem('mySecret', secret);
+            } catch (error) {
+                console.error('Error storing secret:', error);
+            }
+        }
+
+        // Retrieve the secret from localStorage
+        function getSecret() {
+            try {
+                const secret = localStorage.getItem('mySecret');
+                if (secret !== null) {
+                    return secret;
+                } else {
+                    return null;
+                }
+            } catch (error) {
+                console.error('Error retrieving secret:', error);
+                return null;
+            }
+        }
+
+        const storeButton = document.getElementById('storeButton');
+        const retrieveButton = document.getElementById('retrieveButton');
+        const secretInput = document.getElementById('secretInput');
+        const secretDisplay = document.getElementById('secretDisplay');
+
+        storeButton.addEventListener('click', function () {
+            const secretToStore = secretInput.value;
+            if (secretToStore.trim() !== '') {
+                storeSecret(secretToStore);
+                secretDisplay.textContent = 'Secret stored successfully.';
+            } else {
+                secretDisplay.textContent = 'Please enter a valid secret.';
+            }
+        });
+
+        retrieveButton.addEventListener('click', function () {
+            const retrievedSecret = getSecret();
+            if (retrievedSecret) {
+                secretDisplay.textContent = 'Retrieved secret: ' + retrievedSecret;
+            } else {
+                secretDisplay.textContent = 'No secret found.';
+            }
+        });
+    </script>
+
+    <script>
+        // Authentication token (replace with your own token)
+        const accessToken = 'YOUR_ACCESS_TOKEN';
+
+        // Repository information
+        const owner = 'your_username';
+        const repo = 'your_repository';
+        const branch = 'main';
+
+        // Helper function to make API requests
+        async function makeRequest(url, method, data) {
+            const response = await fetch(url, {
+                method: method,
+                headers: {
+                    'Authorization': `Bearer ${accessToken}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            });
+
+            return response.json();
+        }
+
+        // Get the latest commit SHA of the branch
+        const branchUrl = `https://api.github.com/repos/${owner}/${repo}/git/refs/heads/${branch}`;
+        makeRequest(branchUrl, 'GET')
+            .then(branchData => {
+                const latestCommitSha = branchData.object.sha;
+
+                // Create a blob with the file content
+                const fileContent = 'Your file content here';
+                const blobData = {
+                    content: fileContent,
+                    encoding: 'utf-8'
+                };
+                makeRequest(`https://api.github.com/repos/${owner}/${repo}/git/blobs`, 'POST', blobData)
+                    .then(blobResponse => {
+                        const blobSha = blobResponse.sha;
+
+                        // Create a tree with the new blob
+                        const treeData = {
+                            base_tree: latestCommitSha,
+                            tree: [{
+                                path: 'path/to/your/file.txt',
+                                mode: '100644',
+                                type: 'blob',
+                                sha: blobSha
+                            }]
+                        };
+                        makeRequest(`https://api.github.com/repos/${owner}/${repo}/git/trees`, 'POST', treeData)
+                            .then(treeResponse => {
+                                const newTreeSha = treeResponse.sha;
+
+                                // Create a new commit
+                                const commitData = {
+                                    message: 'Commit message',
+                                    parents: [latestCommitSha],
+                                    tree: newTreeSha
+                                };
+                                makeRequest(`https://api.github.com/repos/${owner}/${repo}/git/commits`, 'POST', commitData)
+                                    .then(commitResponse => {
+                                        const newCommitSha = commitResponse.sha;
+
+                                        // Update the branch reference
+                                        const refUpdateData = {
+                                            sha: newCommitSha
+                                        };
+                                        makeRequest(branchUrl, 'PATCH', refUpdateData)
+                                            .then(() => {
+                                                console.log('File committed successfully!');
+                                            })
+                                            .catch(error => {
+                                                console.error('Error updating branch reference:', error);
+                                            });
+                                    })
+                                    .catch(error => {
+                                        console.error('Error creating commit:', error);
+                                    });
+                            })
+                            .catch(error => {
+                                console.error('Error creating tree:', error);
+                            });
+                    })
+                    .catch(error => {
+                        console.error('Error creating blob:', error);
+                    });
+            })
+            .catch(error => {
+                console.error('Error getting branch information:', error);
+            });
+    </script> -->
+</body>
+
+</html>
