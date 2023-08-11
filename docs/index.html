@@ -39,9 +39,9 @@
     <br>
 
     <div>
-        <h2>Paste content here</h2>
+        <h2>Paste Data</h2>
         <div>
-            <textarea type="text" id="bibContext" cols="40" rows="5" placeholder="Paste your bib content here"></textarea>
+            <textarea type="text" id="urlsContent" cols="40" rows="5" placeholder="Paste your urls here"></textarea>
         </div>
         <div>
             <button id="pushButton">Send to Github</button>
@@ -166,147 +166,111 @@
     </script>
 
 
-    <!-- <script>
-        // Store a secret in localStorage
-        function storeSecret(secret) {
-            try {
-                localStorage.setItem('mySecret', secret);
-            } catch (error) {
-                console.error('Error storing secret:', error);
-            }
-        }
-
-        // Retrieve the secret from localStorage
-        function getSecret() {
-            try {
-                const secret = localStorage.getItem('mySecret');
-                if (secret !== null) {
-                    return secret;
-                } else {
-                    return null;
-                }
-            } catch (error) {
-                console.error('Error retrieving secret:', error);
-                return null;
-            }
-        }
-
-        const storeButton = document.getElementById('storeButton');
-        const retrieveButton = document.getElementById('retrieveButton');
-        const secretInput = document.getElementById('secretInput');
-        const secretDisplay = document.getElementById('secretDisplay');
-
-        storeButton.addEventListener('click', function () {
-            const secretToStore = secretInput.value;
-            if (secretToStore.trim() !== '') {
-                storeSecret(secretToStore);
-                secretDisplay.textContent = 'Secret stored successfully.';
-            } else {
-                secretDisplay.textContent = 'Please enter a valid secret.';
-            }
-        });
-
-        retrieveButton.addEventListener('click', function () {
-            const retrievedSecret = getSecret();
-            if (retrievedSecret) {
-                secretDisplay.textContent = 'Retrieved secret: ' + retrievedSecret;
-            } else {
-                secretDisplay.textContent = 'No secret found.';
-            }
-        });
-    </script>
 
     <script>
-        // Authentication token (replace with your own token)
-        const accessToken = 'YOUR_ACCESS_TOKEN';
+        function pushToGitHub(username, repoName, accessToken, fileContent) {
+            const branch = 'main';
 
-        // Repository information
-        const owner = 'your_username';
-        const repo = 'your_repository';
-        const branch = 'main';
+            // Helper function to make API requests
+            async function makeRequest(url, method, data) {
+                const response = await fetch(url, {
+                    method: method,
+                    headers: {
+                        'Authorization': `Bearer ${accessToken}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
 
-        // Helper function to make API requests
-        async function makeRequest(url, method, data) {
-            const response = await fetch(url, {
-                method: method,
-                headers: {
-                    'Authorization': `Bearer ${accessToken}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(data)
-            });
+                return response.json();
+            }
 
-            return response.json();
+            // Get the latest commit SHA of the branch
+            const branchUrl = `https://api.github.com/repos/${username}/${repoName}/git/refs/heads/${branch}`;
+            makeRequest(branchUrl, 'GET')
+                .then(branchData => {
+                    const latestCommitSha = branchData.object.sha;
+                    const blobData = {
+                        content: fileContent,
+                        encoding: 'utf-8'
+                    };
+                    makeRequest(`https://api.github.com/repos/${username}/${repoName}/git/blobs`, 'POST', blobData)
+                        .then(blobResponse => {
+                            const blobSha = blobResponse.sha;
+
+                            // Create a tree with the new blob
+                            const treeData = {
+                                base_tree: latestCommitSha,
+                                tree: [{
+                                    path: 'urls.txt',
+                                    mode: '100644',
+                                    type: 'blob',
+                                    sha: blobSha
+                                }]
+                            };
+                            makeRequest(`https://api.github.com/repos/${username}/${repoName}/git/trees`, 'POST', treeData)
+                                .then(treeResponse => {
+                                    const newTreeSha = treeResponse.sha;
+
+                                    // Create a new commit
+                                    const commitData = {
+                                        message: 'Commit message',
+                                        parents: [latestCommitSha],
+                                        tree: newTreeSha
+                                    };
+                                    makeRequest(`https://api.github.com/repos/${username}/${repoName}/git/commits`, 'POST', commitData)
+                                        .then(commitResponse => {
+                                            const newCommitSha = commitResponse.sha;
+
+                                            // Update the branch reference
+                                            const refUpdateData = {
+                                                sha: newCommitSha
+                                            };
+                                            makeRequest(branchUrl, 'PATCH', refUpdateData)
+                                                .then(() => {
+                                                    console.log('File committed successfully!');
+                                                })
+                                                .catch(error => {
+                                                    console.error('Error updating branch reference:', error);
+                                                });
+                                        })
+                                        .catch(error => {
+                                            console.error('Error creating commit:', error);
+                                        });
+                                })
+                                .catch(error => {
+                                    console.error('Error creating tree:', error);
+                                });
+                        })
+                        .catch(error => {
+                            console.error('Error creating blob:', error);
+                        });
+                })
+                .catch(error => {
+                    console.error('Error getting branch information:', error);
+                });
         }
+        const pustButton = document.getElementById('pushButton');
 
-        // Get the latest commit SHA of the branch
-        const branchUrl = `https://api.github.com/repos/${owner}/${repo}/git/refs/heads/${branch}`;
-        makeRequest(branchUrl, 'GET')
-            .then(branchData => {
-                const latestCommitSha = branchData.object.sha;
+        pustButton.addEventListener('click', function () {
+            const bibContext = document.getElementById('urlsContent').value;
 
-                // Create a blob with the file content
-                const fileContent = 'Your file content here';
-                const blobData = {
-                    content: fileContent,
-                    encoding: 'utf-8'
-                };
-                makeRequest(`https://api.github.com/repos/${owner}/${repo}/git/blobs`, 'POST', blobData)
-                    .then(blobResponse => {
-                        const blobSha = blobResponse.sha;
+            if (bibContext.trim() === '') {
+                alert('Please paste your urls first!');
+                return;
+            }
 
-                        // Create a tree with the new blob
-                        const treeData = {
-                            base_tree: latestCommitSha,
-                            tree: [{
-                                path: 'path/to/your/file.txt',
-                                mode: '100644',
-                                type: 'blob',
-                                sha: blobSha
-                            }]
-                        };
-                        makeRequest(`https://api.github.com/repos/${owner}/${repo}/git/trees`, 'POST', treeData)
-                            .then(treeResponse => {
-                                const newTreeSha = treeResponse.sha;
+            const username = getFromStorage('githubUsername');
+            const repoName = getFromStorage('repositoryName');
+            const accessToken = getFromStorage('githubAccessToken');
 
-                                // Create a new commit
-                                const commitData = {
-                                    message: 'Commit message',
-                                    parents: [latestCommitSha],
-                                    tree: newTreeSha
-                                };
-                                makeRequest(`https://api.github.com/repos/${owner}/${repo}/git/commits`, 'POST', commitData)
-                                    .then(commitResponse => {
-                                        const newCommitSha = commitResponse.sha;
-
-                                        // Update the branch reference
-                                        const refUpdateData = {
-                                            sha: newCommitSha
-                                        };
-                                        makeRequest(branchUrl, 'PATCH', refUpdateData)
-                                            .then(() => {
-                                                console.log('File committed successfully!');
-                                            })
-                                            .catch(error => {
-                                                console.error('Error updating branch reference:', error);
-                                            });
-                                    })
-                                    .catch(error => {
-                                        console.error('Error creating commit:', error);
-                                    });
-                            })
-                            .catch(error => {
-                                console.error('Error creating tree:', error);
-                            });
-                    })
-                    .catch(error => {
-                        console.error('Error creating blob:', error);
-                    });
-            })
-            .catch(error => {
-                console.error('Error getting branch information:', error);
-            });
-    </script> -->
+            if ((username === null) | (repoName === null) | (accessToken === null)) {
+                alert('Please provide your github credentials first!');
+                return;
+            }
+            pushToGitHub(username, repoName, accessToken, bibContext);
+        });
+    </script>
 </body>
 
 </html>
