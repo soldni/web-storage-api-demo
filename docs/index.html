@@ -5,48 +5,55 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>One Click</title>
+    <link rel="stylesheet" type="text/css" href="styles.css">
 </head>
 
 <body>
-    <h1>One Click</h1>
+    <div class="container">
+        <div class="main">
+            <div class="image-container">
+                <img src="logo.png" alt="OneClick mascot" width="200" height="200">
+            </div>
 
-    <img src="logo.png" alt="OneClick mascot" width="200" height="200">
+            <h1>One Click</h1>
 
-    <div>
-        <h2>GitHub Repository Setup</h2>
-        <p>Before you can paste your bib content, you have to setup access to github</p>
-        <div style="margin-bottom: .2em;">
-            <label for="githubUsername">Github username:</label>
-            <input type="text" id="githubUsername">
-        </div>
-        <div style="margin-bottom: .2em;">
-            <label for="repositoryName">Github repository:</label>
-            <input type="text" id="repositoryName">
-        </div>
-        <div style="margin-bottom: .2em;">
-            <label for="githubAccessToken">GitHub Access token:</label>
-            <input type="password" id="githubAccessToken">
-        </div>
-        <div>
-            <button id="storeButton">Store Secret</button>
-            <button id="flushButton">Flush Secret</button>
-        </div>
-        <div>
-            <p id="secretDisplay" style="color:darkgrey; size: 0.8em; font-family: monospace;"></p>
-        </div>
-    </div>
+            <div>
+                <h2>GitHub Repository Setup</h2>
+                <p>Before you can paste your bib content, you have to setup access to github</p>
+                <div style="margin-bottom: .2em;">
+                    <label for="githubUsername">Github username:</label>
+                    <input type="text" id="githubUsername">
+                </div>
+                <div style="margin-bottom: .2em;">
+                    <label for="repositoryName">Github repository:</label>
+                    <input type="text" id="repositoryName">
+                </div>
+                <div style="margin-bottom: .2em;">
+                    <label for="githubAccessToken">GitHub Access token:</label>
+                    <input type="password" id="githubAccessToken">
+                </div>
+                <div>
+                    <button id="storeButton">Store Secret</button>
+                    <button id="flushButton">Flush Secret</button>
+                </div>
+                <div>
+                    <p id="secretDisplay" style="color:darkgrey; size: 0.8em; font-family: monospace;"></p>
+                </div>
+            </div>
 
-    <br>
-    <br>
-    <br>
+            <br>
+            <br>
+            <br>
 
-    <div>
-        <h2>Paste Data</h2>
-        <div>
-            <textarea type="text" id="urlsContent" cols="40" rows="5" placeholder="Paste your urls here"></textarea>
-        </div>
-        <div>
-            <button id="pushButton">Send to Github</button>
+            <div>
+                <h2>Paste Data</h2>
+                <div>
+                    <textarea type="text" id="urlsContent" cols="68" rows="10" placeholder="Paste your urls here"></textarea>
+                </div>
+                <div>
+                    <button id="pushButton">Send to Github</button>
+                </div>
+            </div>
         </div>
     </div>
 
