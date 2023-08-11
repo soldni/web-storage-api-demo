@@ -77,7 +77,7 @@
 
             if (match) {
                 var username = match[1];
-                var repoName = match[2];
+                var repoName = match[2].replace(/\/$/, '');
             }
         }
 
